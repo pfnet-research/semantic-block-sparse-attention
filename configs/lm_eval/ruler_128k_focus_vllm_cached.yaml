@@ -1,0 +1,35 @@
+# RULER focus suite at 124K (bin 126976) for vLLM-served models. The bin is
+# below 131072 so that the prompt, chat template and generated tokens fit in
+# max_model_len 131072.
+#
+# Prompts are read from the cache at $SEMBLO_RULER_CACHE_DIR, whose key hashes the
+# tokenizer, max_seq_lengths, samples_per_length, seed and package versions. The
+# suite forwards only the tokenizer to the tasks and pins samples_per_length, so
+# every model with the same tokenizer_id reads the same prompts.
+description: "128K RULER focus for vLLM models, cache-key compatible with the local-HF cache."
+lm_eval_model: vllm
+include_path: lm_eval_tasks/ruler_cached
+include_defaults: false
+tasks:
+  - semblo_ruler_niah_multikey_3
+  - semblo_ruler_niah_multivalue
+  - semblo_ruler_cwe
+  - semblo_ruler_vt
+  - semblo_ruler_qa_squad
+batch_size: 1
+log_samples: true
+compact_log_samples: true
+apply_chat_template: true
+fewshot_as_multiturn: true
+metadata:
+  max_seq_lengths: [126976]
+  samples_per_length: 400
+task_manager_model_arg_keys:
+  - tokenizer
+gen_kwargs:
+  temperature: 0.0
+  top_p: 1.0
+output_path: runs/eval/ruler_128k_focus_vllm
+model_args:
+  max_length: 131072
+seed: 0

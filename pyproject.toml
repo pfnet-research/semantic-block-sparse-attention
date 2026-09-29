@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "semblo"
+version = "0.1.0"
+description = "Coarse semantic blocks: training-free sparse attention for long prompts, as a vLLM plugin."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "BSD-3-Clause"}
+authors = [{name = "Preferred Networks, Inc."}]
+dependencies = [
+  "datasets>=2.19.0",
+  "huggingface_hub>=0.24.0",
+  "numpy>=1.24",
+  "pandas>=2.0",
+  "pyarrow>=15.0",
+  "PyYAML>=6.0",
+  "tqdm>=4.66",
+  "transformers>=5.6.2",
+  "torch>=2.3.0",
+  "safetensors>=0.4.3",
+]
+
+[project.optional-dependencies]
+vllm = ["vllm>=0.19.1,<0.20"]
+lm-eval = ["lm_eval[ruler]>=0.4.9", "ray>=2.40"]
+test = ["pytest>=8.0"]
+
+[project.scripts]
+semblo-run = "semblo.cli:run_main"
+semblo-lm-eval = "semblo.lm_eval_runner:main"
+semblo-benchmark = "semblo.vllm_plugin.benchmark:main"
+
+[project.entry-points."vllm.general_plugins"]
+semblo = "semblo.vllm_plugin:register"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["semblo*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

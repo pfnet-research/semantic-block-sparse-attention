@@ -1,0 +1,15 @@
+# environments and caches
+.venv*/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.cache/
+.DS_Store
+
+# prepared checkpoints, datasets, prompt caches and run outputs (see README.md)
+/checkpoints
+/data
+/runs
+/arxiv_under_review_iclr27/
+*.log

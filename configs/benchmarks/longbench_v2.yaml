@@ -1,0 +1,9 @@
+benchmark: longbench_v2
+dataset_name: THUDM/LongBench-v2
+split: train
+cot: false
+prompt_style: official
+extraction_mode: official_longbench_v2
+generation:
+  max_new_tokens: 128
+  temperature: 0.1

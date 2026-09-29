@@ -1,0 +1,33 @@
+# RULER HotpotQA (qa_hotpot) at 1M (bin 1048576). Each question has 2 gold and
+# 8 retriever-chosen distractor paragraphs. The rest of the context is filled with
+# other questions' paragraphs, shuffled with a fixed seed. The model answers only,
+# with 32 generated tokens, scored by substring match (lm_eval's RULER task).
+#
+# HotpotQA replaces SQuAD QA in the RULER suite because SQuAD's 1,204 paragraphs
+# run out at about 213K tokens, after which the official generator repeats them.
+# HotpotQA's 66,635 paragraphs fill a 1M prompt without repetition.
+#
+# The suite has its own cache key, so dense and sparse runs read the same prompts.
+description: "1M RULER HotpotQA for vLLM models, cached prompts shared by both arms."
+lm_eval_model: vllm
+include_path: lm_eval_tasks/ruler_cached
+include_defaults: false
+tasks:
+  - semblo_ruler_qa_hotpot
+batch_size: 1
+log_samples: true
+compact_log_samples: true
+apply_chat_template: true
+fewshot_as_multiturn: true
+metadata:
+  max_seq_lengths: [1048576]
+  samples_per_length: 100
+task_manager_model_arg_keys:
+  - tokenizer
+gen_kwargs:
+  temperature: 0.0
+  top_p: 1.0
+output_path: runs/eval/ruler_hotpot_1m_vllm_cached
+model_args:
+  max_length: 1049600
+seed: 0

@@ -1,0 +1,3 @@
+include: semblo_ruler_niah_single_1.yaml
+task: semblo_ruler_niah_multikey_1
+custom_dataset: !function cached_utils.niah_multikey_1

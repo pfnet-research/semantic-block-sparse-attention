@@ -1,0 +1,37 @@
+{
+  "_comment": [
+    "Runtime settings for a prepared Qwen3.5 checkpoint.",
+    "scripts/run_paper_cell.sh overrides the selection and capacity settings for each measurement."
+  ],
+  "text_config": {
+    "semblo_bucket_size_penalty": 0.0,
+    "semblo_enabled": true,
+    "semblo_index_dim": 256,
+    "semblo_kmeans_iters": 4,
+    "semblo_kmeans_sample_size": 8192,
+    "semblo_layer_indices": [
+      3,
+      7,
+      11,
+      15,
+      19,
+      23,
+      27,
+      31
+    ],
+    "semblo_max_probe_buckets": 1024,
+    "semblo_num_centroids": 64,
+    "semblo_num_factors": 2,
+    "semblo_selection_temperature": 0.05,
+    "semblo_stop_after_layer": null,
+    "semblo_target_tokens": 4096,
+    "semblo_top_centroids_per_factor": 64,
+    "semblo_runtime_manifest_file": "semblo_runtime.json",
+    "semblo_runtime_weights_file": "semblo_runtime.safetensors",
+    "semblo_vllm_decode_num_splits": 8,
+    "semblo_vllm_mode": "sparse",
+    "semblo_vllm_pack_prompt_kv": true,
+    "semblo_vllm_query_chunk_size": 1024,
+    "semblo_vllm_token_capacity": 16384
+  }
+}

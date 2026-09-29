@@ -1,0 +1,3 @@
+include: semblo_ruler_qa_squad.yaml
+task: semblo_ruler_qa_hotpot
+custom_dataset: !function cached_utils.ruler_qa_hotpot

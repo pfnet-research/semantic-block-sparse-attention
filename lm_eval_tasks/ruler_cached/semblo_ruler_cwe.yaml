@@ -1,0 +1,9 @@
+include: semblo_ruler_niah_single_1.yaml
+task: semblo_ruler_cwe
+custom_dataset: !function cached_utils.ruler_cwe
+target_delimiter: "\n\n"
+generation_kwargs:
+  do_sample: false
+  temperature: 0.0
+  max_gen_toks: 120
+  until: []

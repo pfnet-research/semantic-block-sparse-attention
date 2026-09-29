@@ -1,0 +1,20 @@
+group: semblo_ruler_cached
+task:
+  - semblo_ruler_niah_single_1
+  - semblo_ruler_niah_single_2
+  - semblo_ruler_niah_single_3
+  - semblo_ruler_niah_multikey_1
+  - semblo_ruler_niah_multikey_2
+  - semblo_ruler_niah_multikey_3
+  - semblo_ruler_niah_multiquery
+  - semblo_ruler_niah_multivalue
+  - semblo_ruler_vt
+  - semblo_ruler_cwe
+  - semblo_ruler_fwe
+  - semblo_ruler_qa_squad
+  - semblo_ruler_qa_hotpot
+aggregate_metric_list:
+  - metric: "4096"
+    weight_by_size: false
+metadata:
+  version: 1

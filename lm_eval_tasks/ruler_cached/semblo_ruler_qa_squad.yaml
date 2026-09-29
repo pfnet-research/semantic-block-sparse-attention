@@ -1,0 +1,10 @@
+include: semblo_ruler_niah_single_1.yaml
+task: semblo_ruler_qa_squad
+custom_dataset: !function cached_utils.ruler_qa_squad
+process_results: !function common_utils.process_results_part
+test_split: test
+generation_kwargs:
+  do_sample: false
+  temperature: 0.0
+  max_gen_toks: 32
+  until: []

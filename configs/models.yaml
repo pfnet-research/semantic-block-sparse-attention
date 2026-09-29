@@ -1,0 +1,816 @@
+# Model presets for the evaluation entry points (semblo.lm_eval_runner, semblo.cli).
+# Qwen3.5-4B, Qwen3.5-35B-A3B and Nemotron 3.5 Lightning, dense and with the sparse attention of
+# this repository, and Qwen3.5-2B dense. Beyond the native 262,144 positions the entry points override
+# max_position_embeddings and the RoPE (see scripts/run_paper_cell.sh). limit_mm_per_prompt disables
+# the vision tower, whose profiling pass crashes inside FlashAttention at long max_model_len. The
+# evaluations are text-only.
+models:
+  qwen3_5_4b_dense_256k:
+
+    hf_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 263168
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 263168
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.75
+      max_num_seqs: 1
+      # Use 16K chunks for this long-context dense baseline. Unchunked prefill
+      # produced incorrect outputs in the measurement environment.
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: long-length dense baseline (256k)
+      native_context_tokens: 262144
+
+  qwen3_5_4b_dense_512k:
+
+    hf_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 525312
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 525312
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.60
+      max_num_seqs: 1
+      # Chunked prefill is needed for correct outputs (see the 256k entry).
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: long-length dense baseline (512k)
+      native_context_tokens: 262144
+
+  qwen3_5_4b_dense_1m:
+
+    hf_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 1049600
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 1049600
+    vllm:
+      # With chunked prefill the activations are small enough for 1M dense
+      # to fit on one GPU.
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.70
+      max_num_seqs: 1
+      # Chunked prefill is needed for correct outputs (see the 256k entry).
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: long-length dense baseline (1m)
+      native_context_tokens: 262144
+
+  qwen3_5_4b_semblo_512k:
+
+    hf_id: checkpoints/qwen3_5_4b/raw-keys
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 525312
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_PLUGINS: semblo
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        semblo_vllm_collect_selection_stats: true
+        semblo_max_probe_buckets: 4096
+        max_position_embeddings: 525312
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.60
+      max_num_seqs: 1
+      enable_chunked_prefill: false
+      enable_prefix_caching: false
+      max_num_batched_tokens: 525312
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+      compilation_config:
+        cudagraph_mode: PIECEWISE
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: long-length no-learning arm (512k) with an identity projection and a 256-d native-key index
+      native_context_tokens: 262144
+
+  qwen3_5_4b_semblo_1m:
+
+    hf_id: checkpoints/qwen3_5_4b/raw-keys
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 1049600
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_PLUGINS: semblo
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        semblo_vllm_collect_selection_stats: true
+        semblo_max_probe_buckets: 4096
+        max_position_embeddings: 1049600
+    vllm:
+      tensor_parallel_size: 2
+      disable_custom_all_reduce: true
+      gpu_memory_utilization: 0.60
+      max_num_seqs: 1
+      enable_chunked_prefill: false
+      enable_prefix_caching: false
+      max_num_batched_tokens: 1049600
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+      compilation_config:
+        cudagraph_mode: PIECEWISE
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: long-length sparse arm (1m)
+      native_context_tokens: 262144
+
+  qwen3_5_2b_dense_256k:
+
+    hf_id: Qwen/Qwen3.5-2B
+    # The 4B tokenizer is byte-identical, and the cached RULER prompts are keyed
+    # on its id. The chat template renders the same with enable_thinking false.
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 263168
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 263168
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.75
+      max_num_seqs: 1
+      # Use 16K chunks for this long-context dense baseline. Unchunked prefill
+      # produced incorrect outputs in the measurement environment.
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: the smaller dense reference of the same family (Qwen3.5-2B, six full-attention layers of 8 query / 2 KV heads), same protocol as the 4B dense baseline (256k)
+      native_context_tokens: 262144
+
+  qwen3_5_2b_dense_512k:
+
+    hf_id: Qwen/Qwen3.5-2B
+    # The 4B tokenizer is byte-identical, and the cached RULER prompts are keyed
+    # on its id. The chat template renders the same with enable_thinking false.
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 525312
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 525312
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.60
+      max_num_seqs: 1
+      # Chunked prefill is needed for correct outputs (see the 256k entry).
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: the smaller dense reference of the same family (Qwen3.5-2B, six full-attention layers of 8 query / 2 KV heads), same protocol as the 4B dense baseline (512k)
+      native_context_tokens: 262144
+
+  qwen3_5_2b_dense_1m:
+
+    hf_id: Qwen/Qwen3.5-2B
+    # The 4B tokenizer is byte-identical, and the cached RULER prompts are keyed
+    # on its id. The chat template renders the same with enable_thinking false.
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 1049600
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 1049600
+    vllm:
+      # With chunked prefill the activations are small enough for 1M dense
+      # to fit on one GPU.
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.70
+      max_num_seqs: 1
+      # Chunked prefill is needed for correct outputs (see the 256k entry).
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: the smaller dense reference of the same family (Qwen3.5-2B, six full-attention layers of 8 query / 2 KV heads), same protocol as the 4B dense baseline (1m)
+      native_context_tokens: 262144
+
+  qwen3_5_35b_a3b_dense_256k:
+
+    hf_id: Qwen/Qwen3.5-35B-A3B
+    # The 4B tokenizer and chat template are byte-identical, and the cached RULER
+    # prompts are keyed on the 4B id.
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 263168
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 263168
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 1
+      # Use 16K chunks for this long-context dense baseline. Unchunked prefill
+      # produced incorrect outputs in the measurement environment.
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: Qwen3.5-35B-A3B dense (MoE, ten full-attention layers of 16 query / 2 KV heads), the same protocol as the 4B dense baseline
+      native_context_tokens: 262144
+
+  qwen3_5_35b_a3b_dense_512k:
+
+    hf_id: Qwen/Qwen3.5-35B-A3B
+    # The 4B tokenizer and chat template are byte-identical, and the cached RULER
+    # prompts are keyed on the 4B id.
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 525312
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 525312
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 1
+      # Chunked prefill is needed for correct outputs (see the 256k entry).
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: Qwen3.5-35B-A3B dense (MoE, ten full-attention layers of 16 query / 2 KV heads), the same protocol as the 4B dense baseline
+      native_context_tokens: 262144
+
+  qwen3_5_35b_a3b_dense_1m:
+
+    hf_id: Qwen/Qwen3.5-35B-A3B
+    # The 4B tokenizer and chat template are byte-identical, and the cached RULER
+    # prompts are keyed on the 4B id.
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 1049600
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        max_position_embeddings: 1049600
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 1
+      # Chunked prefill is needed for correct outputs (see the 256k entry).
+      enable_chunked_prefill: true
+      enable_prefix_caching: false
+      max_num_batched_tokens: 16384
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: Qwen3.5-35B-A3B dense (MoE, ten full-attention layers of 16 query / 2 KV heads), the same protocol as the 4B dense baseline
+      native_context_tokens: 262144
+
+  qwen3_5_35b_a3b_semblo_256k:
+
+    hf_id: checkpoints/qwen3_5_35b_a3b/raw-keys
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 263168
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_PLUGINS: semblo
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        semblo_vllm_collect_selection_stats: true
+        semblo_max_probe_buckets: 4096
+        max_position_embeddings: 263168
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 1
+      enable_chunked_prefill: false
+      enable_prefix_caching: false
+      max_num_batched_tokens: 263168
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+      compilation_config:
+        cudagraph_mode: PIECEWISE
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: Qwen3.5-35B-A3B with identity routing over its ten full-attention layers (scripts/prepare_qwen3_5_moe_checkpoint.py), the paper's raw-keys arm
+
+  qwen3_5_35b_a3b_semblo_512k:
+
+    hf_id: checkpoints/qwen3_5_35b_a3b/raw-keys
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 525312
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_PLUGINS: semblo
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        semblo_vllm_collect_selection_stats: true
+        semblo_max_probe_buckets: 4096
+        max_position_embeddings: 525312
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 1
+      enable_chunked_prefill: false
+      enable_prefix_caching: false
+      max_num_batched_tokens: 525312
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+      compilation_config:
+        cudagraph_mode: PIECEWISE
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: Qwen3.5-35B-A3B with identity routing over its ten full-attention layers (scripts/prepare_qwen3_5_moe_checkpoint.py), the paper's raw-keys arm
+
+  qwen3_5_35b_a3b_semblo_1m:
+
+    hf_id: checkpoints/qwen3_5_35b_a3b/raw-keys
+    tokenizer_id: Qwen/Qwen3.5-4B
+    backend: vllm
+    model_family: qwen3_5
+    max_model_len: 1049600
+    dtype: bfloat16
+    trust_remote_code: true
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_PLUGINS: semblo
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      text_config:
+        semblo_vllm_collect_selection_stats: true
+        semblo_max_probe_buckets: 4096
+        max_position_embeddings: 1049600
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.9
+      max_num_seqs: 1
+      enable_chunked_prefill: false
+      enable_prefix_caching: false
+      max_num_batched_tokens: 1049600
+      limit_mm_per_prompt:
+        image: 0
+        video: 0
+      compilation_config:
+        cudagraph_mode: PIECEWISE
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: Qwen3.5-35B-A3B with identity routing over its ten full-attention layers (scripts/prepare_qwen3_5_moe_checkpoint.py), the paper's raw-keys arm
+
+  nemotron35_lightning_dense_256k:
+
+    hf_id: checkpoints/nemotron35_lightning/dense
+    tokenizer_id: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16
+    backend: vllm
+    model_family: nemotron_h
+    max_model_len: 263168
+    dtype: bfloat16
+    trust_remote_code: false
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      max_position_embeddings: 263168
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.90
+      max_num_seqs: 1
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: dense baseline (256k), stock vLLM 0.19.1 NemotronH, chunked prefill
+      native_context_tokens: 262144
+
+  nemotron35_lightning_semblo_256k:
+
+    hf_id: checkpoints/nemotron35_lightning/raw-keys
+    tokenizer_id: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16
+    backend: vllm
+    model_family: nemotron_h
+    max_model_len: 263168
+    dtype: bfloat16
+    trust_remote_code: false
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_PLUGINS: semblo
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      semblo_vllm_collect_selection_stats: true
+      semblo_max_probe_buckets: 4096
+      max_position_embeddings: 263168
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.90
+      max_num_seqs: 1
+      enable_chunked_prefill: false
+      enable_prefix_caching: false
+      max_num_batched_tokens: 263168
+      compilation_config:
+        cudagraph_mode: PIECEWISE
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: sparse arm (256k) with identity routing over the 6 attention layers, whole-prompt path
+      native_context_tokens: 262144
+
+  nemotron35_lightning_dense_512k:
+
+    hf_id: checkpoints/nemotron35_lightning/dense
+    tokenizer_id: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16
+    backend: vllm
+    model_family: nemotron_h
+    max_model_len: 525312
+    dtype: bfloat16
+    trust_remote_code: false
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      max_position_embeddings: 525312
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.90
+      max_num_seqs: 1
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: dense baseline (512k), stock vLLM 0.19.1 NemotronH, chunked prefill
+      native_context_tokens: 262144
+
+  nemotron35_lightning_semblo_512k:
+
+    hf_id: checkpoints/nemotron35_lightning/raw-keys
+    tokenizer_id: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16
+    backend: vllm
+    model_family: nemotron_h
+    max_model_len: 525312
+    dtype: bfloat16
+    trust_remote_code: false
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_PLUGINS: semblo
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      semblo_vllm_collect_selection_stats: true
+      semblo_max_probe_buckets: 4096
+      max_position_embeddings: 525312
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.90
+      max_num_seqs: 1
+      enable_chunked_prefill: false
+      enable_prefix_caching: false
+      max_num_batched_tokens: 525312
+      compilation_config:
+        cudagraph_mode: PIECEWISE
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: sparse arm (512k) with identity routing over the 6 attention layers, whole-prompt path
+      native_context_tokens: 262144
+
+  nemotron35_lightning_dense_1m:
+
+    hf_id: checkpoints/nemotron35_lightning/dense
+    tokenizer_id: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16
+    backend: vllm
+    model_family: nemotron_h
+    max_model_len: 1049600
+    dtype: bfloat16
+    trust_remote_code: false
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      max_position_embeddings: 1049600
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.90
+      max_num_seqs: 1
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: dense baseline (1m), stock vLLM 0.19.1 NemotronH, chunked prefill
+      native_context_tokens: 262144
+
+  nemotron35_lightning_semblo_1m:
+
+    hf_id: checkpoints/nemotron35_lightning/raw-keys
+    tokenizer_id: nvidia/NVIDIA-Nemotron-3.5-Lightning-30B-A3B-BF16
+    backend: vllm
+    model_family: nemotron_h
+    max_model_len: 1049600
+    dtype: bfloat16
+    trust_remote_code: false
+    chat_template_kwargs:
+      enable_thinking: false
+    env:
+      VLLM_PLUGINS: semblo
+      VLLM_ALLOW_LONG_MAX_MODEL_LEN: "1"
+      VLLM_ENABLE_V1_MULTIPROCESSING: "0"
+      VLLM_DISABLE_COMPILE_CACHE: "1"
+      TOKENIZERS_PARALLELISM: "false"
+      PYTORCH_ALLOC_CONF: "expandable_segments:True"
+    hf_overrides:
+      semblo_vllm_collect_selection_stats: true
+      semblo_max_probe_buckets: 4096
+      max_position_embeddings: 1049600
+    vllm:
+      tensor_parallel_size: 1
+      gpu_memory_utilization: 0.90
+      max_num_seqs: 1
+      enable_chunked_prefill: false
+      enable_prefix_caching: false
+      max_num_batched_tokens: 1049600
+      compilation_config:
+        cudagraph_mode: PIECEWISE
+    generation:
+      max_new_tokens: 2048
+      temperature: 0.0
+      top_p: 1.0
+      seed: 0
+    metadata:
+      role: sparse arm (1m) with identity routing over the 6 attention layers, whole-prompt path
+      native_context_tokens: 262144

@@ -1,0 +1,29 @@
+# LongBench v2 at a fixed context length.
+#
+# The dataset's `length` column is categorical (short/medium/long), and its long
+# bin runs to about 4.5M tokens under this tokenizer. This config fixes the
+# length instead: prompts are middle-truncated to 524,288 tokens the way the
+# official predictor truncates, items whose full prompt is under 131,072 tokens
+# are excluded, and the realized token count is recorded for every example.
+#
+# Items per prompt length over all 503 items (Qwen/Qwen3.5-4B tokenizer,
+# official prompt, no CoT; counts from scripts/count_longbench_v2_tokens.py):
+#     <=64k 182   64-128k 116   128-256k 105   256-512k 48   512k-1M 19   >1M 33
+#     median 102,551   p90 549,058   max 4,523,450
+# This config therefore selects 205 items, 52 of which are truncated to 512K.
+#
+# Decoding is greedy rather than the official temperature 0.1, so that scores
+# are deterministic and comparable with the other benchmarks.
+benchmark: longbench_v2
+dataset_name: THUDM/LongBench-v2
+split: train
+cot: false
+prompt_style: official
+extraction_mode: official_longbench_v2
+tokenizer_id: Qwen/Qwen3.5-4B
+max_prompt_tokens: 524288
+min_prompt_tokens: 131072
+truncation: middle
+generation:
+  max_new_tokens: 128
+  temperature: 0.0

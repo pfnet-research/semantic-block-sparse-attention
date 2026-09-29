@@ -1,0 +1,14 @@
+# The same protocol at 64K, as a quick check that the pipeline runs.
+benchmark: longbench_v2
+dataset_name: THUDM/LongBench-v2
+split: train
+cot: false
+prompt_style: official
+extraction_mode: official_longbench_v2
+tokenizer_id: Qwen/Qwen3.5-4B
+max_prompt_tokens: 65536
+min_prompt_tokens: 32768
+truncation: middle
+generation:
+  max_new_tokens: 128
+  temperature: 0.0
